@@ -2,6 +2,8 @@
 
 timebot is a Slack slash command that prints out the current time for every user in the config file.
 
+![screenshot](/screenshot.png)
+
 ## Usage
 
 1. `go get github.com/kamaln7/timebot/cmd/timebot`
