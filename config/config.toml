@@ -1,0 +1,6 @@
+Host = "127.0.0.1:8002"
+InChannel = true
+
+[Timezones]
+jane = "Europe/London"
+chris = "US/Central"
