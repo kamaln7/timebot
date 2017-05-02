@@ -11,6 +11,7 @@ func main() {
 	bot := timebot.New(&timebot.Config{
 		Host:      conf.Host,
 		Timezones: conf.Timezones,
+		InChannel: conf.InChannel,
 	})
 	bot.Listen()
 }
