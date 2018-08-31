@@ -1,17 +1,16 @@
 package main
 
 import (
+	"log"
+
 	"github.com/kamaln7/timebot"
-	"github.com/kamaln7/timebot/config"
 )
 
 func main() {
-	conf := config.Read()
+	bot, err := timebot.New()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	bot := timebot.New(&timebot.Config{
-		Host:      conf.Host,
-		Timezones: conf.Timezones,
-		InChannel: conf.InChannel,
-	})
 	bot.Listen()
 }

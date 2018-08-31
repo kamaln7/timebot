@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -16,17 +16,17 @@ type Config struct {
 }
 
 // Read reads the config file and returns a Config struct
-func Read() Config {
+func Read() (*Config, error) {
 	configfile := "./config.toml"
 	_, err := os.Stat(configfile)
 	if err != nil {
-		log.Fatal("config file is missing: ", configfile)
+		return nil, fmt.Errorf("config file is missing: path = %s: %v", configfile, err)
 	}
 
 	var config Config
 	if _, err := toml.DecodeFile(configfile, &config); err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("invalid config: %v", err)
 	}
 
-	return config
+	return &config, nil
 }

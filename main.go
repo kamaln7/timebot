@@ -3,9 +3,12 @@ package timebot
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/kamaln7/timebot/config"
 	"github.com/kamaln7/timebot/munge"
 
 	"github.com/ejholmes/slash"
@@ -24,14 +27,34 @@ type Config struct {
 	Timezones map[string]string
 }
 
-func New(config *Config) *Timebot {
+func readConfig() (*Config, error) {
+	conf, err := config.Read()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't read config: %v", err)
+	}
+
+	c := &Config{
+		Host:      conf.Host,
+		Timezones: conf.Timezones,
+		InChannel: conf.InChannel,
+	}
+
+	return c, nil
+}
+
+func New() (*Timebot, error) {
+	conf, err := readConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	bot := &Timebot{
-		Config: config,
+		Config: conf,
 	}
 
 	bot.Init()
 
-	return bot
+	return bot, nil
 }
 
 func (t *Timebot) Init() {
@@ -40,15 +63,36 @@ func (t *Timebot) Init() {
 }
 
 func (t *Timebot) handle(ctx context.Context, r slash.Responder, command slash.Command) error {
-	times, err := t.getTimes()
+	var (
+		responseLines []string
+		err           error
+	)
+
+	conf, err := readConfig()
 	if err != nil {
-		return err
+		responseLines = append(responseLines, fmt.Sprintf("could not read config: %v", err))
+		if t.Config != nil {
+			responseLines = append(responseLines, "using latest valid config")
+		}
+	} else {
+		t.Config = conf
 	}
 
-	if err := r.Respond(slash.Response{
+	if t.Config != nil {
+		times, err := t.getTimes()
+		if err != nil {
+			responseLines = append(responseLines, err.Error())
+		} else {
+			responseLines = append(responseLines, times)
+		}
+	}
+
+	err = r.Respond(slash.Response{
 		InChannel: t.Config.InChannel,
-		Text:      times,
-	}); err != nil {
+		Text:      strings.Join(responseLines, "\n"),
+	})
+
+	if err != nil {
 		return err
 	}
 
@@ -83,5 +127,6 @@ func (t *Timebot) getTimes() (string, error) {
 }
 
 func (t *Timebot) Listen() {
+	log.Printf("timebot listening on %s\n", t.Config.Host)
 	http.ListenAndServe(t.Config.Host, t.server)
 }
